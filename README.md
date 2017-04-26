@@ -20,5 +20,5 @@
 <li>BMM: Bernoulli Mixture Models (cpp version of the BMM.ipynb for handwritten digits recognition)</li>
 </ul>
 </li>
-<li>IMAGES: some images used in the notebooks</li>
+<li>IMAGES: some images and data files used in the notebooks</li>
 </ol>
