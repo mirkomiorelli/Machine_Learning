@@ -4,6 +4,7 @@
 <ul>
 <li><b>weight_height.csv</b> (used in the Multiple Linear Regression notebook)</li>
 <li><b>faithful.csv</b> (used in the Kmeans clustering ang Gaussian Mixture notebooks)</li>
+<li><b>train-images.idx3-ubyte</b> (used in the BMM .cpp code, binary dataset of handwritten digits)</li>
 </ul>
 </li>
 <li>NOTEBOOKS: containing jupyter notebooks with theory and python codes
