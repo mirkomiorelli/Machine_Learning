@@ -9,6 +9,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 #include "helper.h"
 
@@ -21,9 +22,9 @@ int ReverseInt (int i){
     return((int)ch1<<24)+((int)ch2<<16)+((int)ch3<<8)+ch4;
 }
 
-void ReadMNIST(int NumberOfImages, int DataOfAnImage,std::vector<std::vector<double>> &arr) {
+void ReadMNIST(int NumberOfImages, int DataOfAnImage,std::vector<std::vector<double>> &arr,std::string file_name) {
     arr.resize(NumberOfImages,std::vector<double>(DataOfAnImage));
-    std::ifstream file("data/train-images.idx3-ubyte",std::ios::binary);
+    std::ifstream file(file_name.c_str(),std::ios::binary);
     if (file.is_open()) {
         int magic_number=0;
         int number_of_images=0;

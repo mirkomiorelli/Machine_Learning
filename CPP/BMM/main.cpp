@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <string>
 #include <vector>
 #include <fstream>
 #include <chrono>  // for high_resolution_clock
@@ -23,7 +24,8 @@ int main(){
 	std::vector<std::vector<double>> ar;
 	std::size_t N = 784;
 	std::size_t M = 60000;
-	ReadMNIST(M,N,ar);
+	std::string file_name = "../../DATASETS/train-images.idx3-ubyte";
+	ReadMNIST(M,N,ar,file_name);
 
 	// Normalize the data and convert to binary
 	normalize(ar,M,N);
