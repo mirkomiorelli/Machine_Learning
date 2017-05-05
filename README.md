@@ -19,6 +19,7 @@
 <li>CPP: .cpp version of some of the implementations in the notebooks
 <ul>
 <li>BMM: Bernoulli Mixture Models (cpp version of the BMM.ipynb for handwritten digits recognition)</li>
+<li>NNET: Multi-layer neural network (work in progress)</li>
 </ul>
 </li>
 <li>IMAGES: some images and data files used in the notebooks</li>
