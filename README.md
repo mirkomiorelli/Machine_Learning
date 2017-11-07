@@ -1,3 +1,7 @@
+<h1> Hello! </h1>
+
+Hello, my name is Mirko and I am a phycisist and machine learning enthusiast. In this repository you can find a variety of machine learning/optimization techniques applied to a set of toy problems/datasets. I decided to write notebooks for each of these topics where I usually give an introduction, some math background and then I present an implementation of the algorithm under discussion in python. The aim of these notebooks is to keep track of what I learn and maybe (hopefully) help people who, like me, want to know more about machine learning.
+
 <h1> LIST OF FILES AND FOLDERS </h1>
 <ol>
 <li>DATASETS: containing the datasets used in the examples
