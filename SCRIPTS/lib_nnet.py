@@ -4,14 +4,13 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from pylab import *
-import lib_data as libd
 
 
 # Class that contains all the paramaters of the network
 class network:
 	# Initialize neural network (1 hidden layer)
 	def __init__(self, n_input = 2, n_hidden = 2, n_output = 2, lrate = 0.5, opt = 'SGD', 
-		mom = 0.0):
+		mom = 0.0, seed=None):
 		# Set learning rate for back propagation and momentum 
 		self.lrate = lrate
 		self.momentum = mom
@@ -20,7 +19,8 @@ class network:
 		self.n_hidden = n_hidden
 		self.n_output = n_output
 		# Initialize weight matrices (+1 in first dimension is for bias)
-		np.random.seed(0)
+		if seed is not None:
+			np.random.seed(seed)
 		self.W = {'i->h': np.random.rand(n_input+1,n_hidden),
 			'h->o': np.random.rand(n_hidden+1,n_output)}
 		# Initialize delta weights matrices (used when doing batch training)
@@ -35,160 +35,185 @@ class network:
 		self.opt = opt
 		self.deltas = {'i->h': np.zeros((self.n_input+1,self.n_hidden),dtype=float),
 			'h->o': np.zeros((self.n_hidden+1,self.n_output),dtype=float)}
+		# Error(loss) vs epoch
+		self.error = []
 		return
 
-# Add bias unit to the vector of inputs
-def addUnitBias(i):
-	return np.append(i,1.0)
+	# Add bias unit to the vector of inputs
+	def addUnitBias(self,i):
+		return np.append(i,1.0)
 
-# Sigmoid activation function
-def activate(o):
-	return 1.0 / (1.0 + np.exp(-o))
-# Derivative of sigmoid function
-def d_activate(o):
-	return o * (1.0 - o)
+	# Sigmoid activation function
+	def activate(self, o):
+		return 1.0 / (1.0 + np.exp(-o))
 
-# Perform linear combination of inputs and weights + bias
-def collapse(W,i):
-	i = addUnitBias(i)
-	return np.dot(i,W)
+	# Derivative of sigmoid function
+	def d_activate(self, o):
+		return o * (1.0 - o)
 
-# Forward propagation step
-def forwardPropagation(network, x):
-	# First layer i -> h
-	network.inputs['x'] = x
-	network.inputs['h'] = collapse(network.W['i->h'],x)
-	network.outputs['h'] = activate(network.inputs['h'])
-	# Second layer h -> o
-	network.inputs['o'] = collapse(network.W['h->o'],network.outputs['h'])
-	network.outputs['o'] = activate(network.inputs['o'])
-	return
+	# Perform linear combination of inputs and weights + bias
+	def collapse(self, W,i):
+		i = self.addUnitBias(i)
+		return np.dot(i,W)
 
-# Backward propagation and update of the weights
-def backwardPropagation(network, x, y):
-	# Calculate delta
-	deltaNode = - (y - network.outputs['o']) * d_activate(network.outputs['o'])
-	# Backpropagate error and calculate delta i->h
-	deltaW = np.zeros(network.W['i->h'].shape)
-	biasedVec = addUnitBias(network.inputs['x'])
-	for i in range(deltaW.shape[0]):
-		for j in range(deltaW.shape[1]):
-			s = np.dot(deltaNode,network.W['h->o'][j,:])
-			deltaW[i,j] = s * d_activate(network.outputs['h'][j]) * biasedVec[i]
-	
-	network.dW['i->h'] = deltaW
-	
-	# Backpropagate error and calculate delta h->o
-	deltaW = np.zeros(network.W['h->o'].shape)
-	biasedVec = addUnitBias(network.outputs['h'])
-	for i in range(deltaW.shape[0]):
-		for j in range(deltaW.shape[1]):
-			deltaW[i,j] = deltaNode[j] * biasedVec[i]
-	
-	network.dW['h->o'] = deltaW
-	
-	return
+	# Forward propagation step
+	def forwardPropagation(self, x):
+		# First layer i -> h
+		self.inputs['x'] = x
+		self.inputs['h'] = self.collapse(self.W['i->h'],x)
+		self.outputs['h'] = self.activate(self.inputs['h'])
+		# Second layer h -> o
+		self.inputs['o'] = self.collapse(self.W['h->o'],self.outputs['h'])
+		self.outputs['o'] = self.activate(self.inputs['o'])
+		return
 
-# Update weights of the network
-def updateWeights(network, batch = False):
-	# Update weights
-	if (network.opt == 'SGD'):
-		# Normal update with gradient
-		network.W['i->h'] = network.W['i->h'] - network.lrate * network.dW['i->h'] 
-		network.W['h->o'] = network.W['h->o'] - network.lrate * network.dW['h->o']
-		# Add momentum 
-		network.W['i->h'] = network.W['i->h'] - network.momentum * network.dWprec['i->h']
-		network.W['h->o'] = network.W['h->o'] - network.momentum * network.dWprec['h->o']
-		# Save currend dW for next iteration
-		network.dWprec['i->h'] = network.dW['i->h']
-		network.dWprec['h->o'] = network.dW['h->o']
-	elif (network.opt == 'BATCH'):
-		# Normal update with gradient
-		network.W['i->h'] = network.W['i->h'] - network.lrate * network.deltas['i->h']
-		network.W['h->o'] = network.W['h->o'] - network.lrate * network.deltas['h->o']
-		# Add momentum 
-		network.W['i->h'] = network.W['i->h'] + network.momentum * network.dWprec['i->h']
-		network.W['h->o'] = network.W['h->o'] + network.momentum * network.dWprec['h->o']
-		# Save currend dW for next iteration
-		network.dWprec['i->h'] = network.deltas['i->h']
-		network.dWprec['h->o'] = network.deltas['h->o']
-	return
+	# Backward propagation and update of the weights
+	def backwardPropagation(self, x, y):
+		# Calculate delta
+		deltaNode = - (y - self.outputs['o']) * self.d_activate(self.outputs['o'])
+		# Backpropagate error and calculate delta i->h
+		deltaW = np.zeros(self.W['i->h'].shape)
+		biasedVec = self.addUnitBias(self.inputs['x'])
+		for i in range(deltaW.shape[0]):
+			for j in range(deltaW.shape[1]):
+				s = np.dot(deltaNode,self.W['h->o'][j,:])
+				deltaW[i,j] = s * self.d_activate(self.outputs['h'][j]) * biasedVec[i]
 
-# Get total error of the network
-def getError(network,x,y):
-	forwardPropagation(network,x)
-	delta = y - network.outputs['o']
-	err = np.dot(np.transpose(delta),delta)
-	return err
+		self.dW['i->h'] = deltaW
 
-# Get misclassification error (returns the number of misclassified datas)
-def getErrorClass(network,x,y):
-	n_tot = x.shape[0]
-	miscl = 0
-	for m in range(n_tot):
-		xx = libd.getRowVector(x,m)
-		yy = libd.getRowVector(y,m)
-		pred_class = predict(network,xx)
-		if (pred_class != np.argmax(yy)):
-			miscl = miscl + 1 
-	return miscl
+		# Backpropagate error and calculate delta h->o
+		deltaW = np.zeros(self.W['h->o'].shape)
+		biasedVec = self.addUnitBias(self.outputs['h'])
+		for i in range(deltaW.shape[0]):
+			for j in range(deltaW.shape[1]):
+				deltaW[i,j] = deltaNode[j] * biasedVec[i]
 
-# Calculate accuracy of the network
-def getAccuracy(network,x,y):
-	error = 0.0
-	for i in range(x.shape[0]):
-		xx = libd.getRowVector(x,i)
-		yy = libd.getRowVector(y,i) 
-		error = error + getError(network,xx,yy)
-	accuracy = 100.0 * (1.0 - (1.0 * error / (1.0 * x.shape[0])))
-	return accuracy
+		self.dW['h->o'] = deltaW
 
-# Predict the output class given the input
-def predict(network,x):
-	forwardPropagation(network,x)
-	return np.argmax(network.outputs['o'])
+		return
 
-# Plot error vs epoch
-def plotErrorVsEpoch(error_list,hidden_list = [2], logx = False, logy = False):
-	
-	color = ["blue","black","green","orange","red","magenta","lime","yellow","darkgreen","gray","aqua"]
-	n_curves = len(error_list)
-	if (len(error_list) != len(hidden_list)):
-		print("Error 2, mismatch in size of input lists!")
-		exit()
-	
-	fig = figure()
-	sub = fig.add_subplot(111)
-	
-	for i in range(n_curves):
-		label = "Hidden nodes#: " + str(hidden_list[i])
-		sub.plot(np.arange(len(error_list[i])),error_list[i],lw=2.0,color=color[i],label=label)
-	sub.set_xlabel("Epoch")
-	sub.set_ylabel("Error")
-	
-	if (logx):
-		sub.set_xscale("log")
-	if (logy):
-		sub.set_yscale("log")
-	
-	plt.legend(loc='upper right',fontsize=10)
-	plt.show()
-	plt.show(block = False)
-	print("Press enter to continue...")
-	raw_input()
-	return
+	# Update weights of the network
+	def updateWeights(self, batch = False):
+		# Update weights
+		if (self.opt == 'SGD'):
+			# Normal update with gradient
+			self.W['i->h'] = self.W['i->h'] - self.lrate * self.dW['i->h']
+			self.W['h->o'] = self.W['h->o'] - self.lrate * self.dW['h->o']
+			# Add momentum
+			self.W['i->h'] = self.W['i->h'] - self.momentum * self.dWprec['i->h']
+			self.W['h->o'] = self.W['h->o'] - self.momentum * self.dWprec['h->o']
+			# Save currend dW for next iteration
+			self.dWprec['i->h'] = self.dW['i->h']
+			self.dWprec['h->o'] = self.dW['h->o']
+		elif (network.opt == 'BATCH'):
+			# Normal update with gradient
+			self.W['i->h'] = self.W['i->h'] - self.lrate * self.deltas['i->h']
+			self.W['h->o'] = self.W['h->o'] - self.lrate * self.deltas['h->o']
+			# Add momentum
+			self.W['i->h'] = self.W['i->h'] + self.momentum * self.dWprec['i->h']
+			self.W['h->o'] = nself.W['h->o'] + self.momentum * self.dWprec['h->o']
+			# Save currend dW for next iteration
+			self.dWprec['i->h'] = self.deltas['i->h']
+			self.dWprec['h->o'] = self.deltas['h->o']
+		return
 
-# Initialize deltas for batch optimization
-def initDeltas(network):
-	network.deltas = {'i->h': np.zeros((network.n_input+1,network.n_hidden),dtype=float),
-		'h->o': np.zeros((network.n_hidden+1,network.n_output),dtype=float)}
-	return
+	# Get total error (loss) of the network
+	def getError(self,x,y):
+		n_samples = x.shape[0]
+		err = 0.0
+		for i in range(n_samples):
+			self.forwardPropagation(x[i,:])
+			delta = y[i,:] - self.outputs['o']
+			err += np.dot(np.transpose(delta),delta)
+		return np.divide(err, n_samples)
 
-# Update deltas for batch optimization
-def updateDeltas(network):
-	network.deltas['i->h'] = network.deltas['i->h'] + network.dW['i->h']
-	network.deltas['h->o'] = network.deltas['h->o'] + network.dW['h->o']
-	return
+	# Calculate accuracy of the network
+	def getAccuracy(self,x,y):
+		# Get prediction from x
+		ypred = self.predict(x)
+		y = [np.argmax(y[i,:]) for i in range(len(y))]
+		# Compare with target
+		accuracy = np.divide(np.nansum([1 for i in range(len(ypred)) if ypred[i] == y[i]]),
+							 len(ypred))
+		return accuracy
+
+	# Predict the output class given the input
+	def predict(self,x):
+		n_samples = x.shape[0]
+		ypred = []
+		for i in range(n_samples):
+			self.forwardPropagation(x[i,:])
+			ypred.append(np.argmax(self.outputs['o']))
+		return ypred
+
+	# Initialize deltas for batch optimization
+	def initDeltas(self):
+		self.deltas = {'i->h': np.zeros((self.n_input+1,self.n_hidden),dtype=float),
+			'h->o': np.zeros((self.n_hidden+1,self.n_output),dtype=float)}
+		return
+
+	# Update deltas for batch optimization
+	def updateDeltas(self):
+		self.deltas['i->h'] = self.deltas['i->h'] + self.dW['i->h']
+		self.deltas['h->o'] = self.deltas['h->o'] + self.dW['h->o']
+		return
+
+	def shuffle(self,x, y):
+		idx = np.arange(len(y))
+		np.random.shuffle(idx)
+		return (x[idx, :], y[idx, :])
+
+	def train(self, x, y, xtest=None, ytest=None, maxIter=100, lrate=0.1, opt='SGD', tol = 1e-8,
+			  bsize = 1, nbatch = 1, mom = 0.0, verbose = True,reshuffle = True):
+
+		# Check training data sizes and determine number of training samples
+		n_training_samples = x.shape[0]
+		if (n_training_samples != y.shape[0]):
+			print("Error 1 in training data size!")
+			exit()
+
+		if xtest is not None and ytest is not None:
+			error_test = []
+
+		bias = np.ones((x.shape[0], 1), dtype=float)  # bias column vector
+		in_des_mtx = np.hstack((x, bias))  # input design matrix
+		# Initiate iterations to train neural network
+		convergence = False
+		it = 0
+		while (not convergence):
+			# Train the network on each data samples (SDG/online training)
+			if (opt == 'SGD'):
+				# Reshuffle data at each epoch
+				if (reshuffle):
+					x, y = self.shuffle(x,y)
+					in_des_mtx = np.hstack((x, bias))  # input design matrix
+				for m in range(n_training_samples):
+					# Get data sample in form of row vector
+					xx = x[m, :]
+					yy = y[m, :]
+					# Forward propagate
+					self.forwardPropagation(xx)
+					# Backward propagate error
+					self.backwardPropagation(xx, yy)
+					# Update weights
+					self.updateWeights()
+				# Get error for the iteration
+				out1 = self.activate(np.dot(in_des_mtx, self.W['i->h']))
+				layer_des_mtx = np.hstack((out1, bias))
+				out2 = self.activate(np.dot(layer_des_mtx, self.W['h->o']))
+				self.error.append(self.getError(x,y))
+				# Get error of test seet
+				if xtest is not None and ytest is not None:
+					error_test.append(self.getError(xtest,ytest))
+				if (verbose):
+					print("SGD - Iter: " + str(it + 1) + " *** Error: " + str(self.error[it]))
+				if (it >= 2):
+					if ((it >= maxIter) or (abs(self.error[it] - self.error[it - 1]) < tol)):
+						convergence = True
+				it = it + 1
+
+		if xtest is not None and ytest is not None:
+			return error_test
 
 # Given input data x and a set of expected values y, train the network
 # opt --> kind of training: 'SGD' == stochastic gradient descent, or online training,
@@ -196,7 +221,7 @@ def updateDeltas(network):
 # weights every batch of data fed to the network, the deltas are cumulated
 # bsize --> batch size
 # nbatch --> number of batches used to train
-def trainNetwork(x, y, maxIter = 100, lrate = 0.1, n_hidden = 2, opt = 'SGD', 
+def trainNetwork(x, y, maxIter = 100, lrate = 0.1, n_hidden = 2, opt = 'SGD',
 	tol = 1e-8, bsize = 1, nbatch = 1, mom = 0.0, verbose = True,
 	reshuffle = True):
 	
@@ -211,18 +236,16 @@ def trainNetwork(x, y, maxIter = 100, lrate = 0.1, n_hidden = 2, opt = 'SGD',
 		exit()
 	
 	# Initialize neural network
-	neural_net = network(n_input = n_input, n_output = n_output, 
-		n_hidden = n_hidden, lrate = lrate, opt = opt, mom = mom)
+	#neural_net = network(n_input = n_input, n_output = n_output,
+	#		n_hidden = n_hidden, lrate = lrate, opt = opt, mom = mom)
 	
 	# Arrays used later for vectorized total error calculation
-	error = []
 	bias = np.ones((x.shape[0],1),dtype=float) # bias column vector
 	in_des_mtx = np.hstack((x,bias)) # input design matrix
 	# Initiate iterations to train neural network
 	convergence = False
 	it = 0
 	while (not convergence):
-		error.append(0.0)
 		# Train the network on each data samples (SDG/online training)
 		if (opt == 'SGD'):
 			# Reshuffle data at each epoch
@@ -231,20 +254,19 @@ def trainNetwork(x, y, maxIter = 100, lrate = 0.1, n_hidden = 2, opt = 'SGD',
 				in_des_mtx = np.hstack((x,bias)) # input design matrix
 			for m in range(n_training_samples):
 				# Get data sample in form of row vector
-				xx = x.loc[m].values
-				yy = y.loc[m].values
+				xx = x[m,:]
+				yy = y[m,:]
 				# Forward propagate
-				forwardPropagation(neural_net,xx)
+				self.forwardPropagation(xx)
 				# Backward propagate error
-				backwardPropagation(neural_net,xx,yy)
+				self.backwardPropagation(xx,yy)
 				# Update weights
-				updateWeights(neural_net)
+				self.updateWeights()
 			# Get error for the iteration
-			out1 = activate(np.dot(in_des_mtx,neural_net.W['i->h']))
+			out1 = self.activate(np.dot(in_des_mtx,self.W['i->h']))
 			layer_des_mtx = np.hstack((out1,bias))
-			out2 = activate(np.dot(layer_des_mtx,neural_net.W['h->o']))
-			derr = out2 - y
-			error[it] = np.sqrt( sum(derr.values * derr.values) / (1.0 * y.shape[0]))
+			out2 = self.activate(np.dot(layer_des_mtx,self.W['h->o']))
+			#self.error.append(self.getError)
 			if (verbose):
 				print("SGD - Iter: " + str(it+1) + " *** Error: " + str(error[it]))
 			if (it >= 2):
@@ -255,7 +277,7 @@ def trainNetwork(x, y, maxIter = 100, lrate = 0.1, n_hidden = 2, opt = 'SGD',
 			# Train the network for each batch, update weights after every batch
 			# by cumulating the random.sample(xrange(0, n_total), bsize)deltas
 			for nb in range(nbatch):
-				initDeltas(neural_net)
+				self.initDeltas()
 				for m in range(bsize):
 					# Get data sample in form of row vector
 					xx = libd.getRowVector(x[nb],m)
