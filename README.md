@@ -10,6 +10,7 @@ Hello, my name is Mirko and I am a phycisist and machine learning enthusiast. In
 <li><b>faithful.csv</b> (used in the Kmeans clustering ang Gaussian Mixture notebooks)</li>
 <li><b>train-images.idx3-ubyte</b> (used in the BMM .cpp code, binary dataset of handwritten digits)</li>
 <li><b>italy_cities.csv</b> (Traveling Salesman problem data set, used in the Simulated Annealing and Genetic Algorithm notebooks)</li>
+<li><b>iris_dataset.csv</b> (Used in the NNET benchmark notebook)</li>
 </ul>
 </li>
 <li>NOTEBOOKS: containing jupyter notebooks with theory and python codes
@@ -21,6 +22,8 @@ Hello, my name is Mirko and I am a phycisist and machine learning enthusiast. In
 <li><b>BMM.ipynb</b> (Bernoulli Mixture Models for recognition of handwritten digits)</li>
 <li><b>SA.ipynb</b> (Simulated Annealing for the solution of the Traveling Salesman problem)</li>
 <li><b>GA.ipynb</b> (Genetic Algorithm for the solution of the Traveling Salesman problem)</li>
+<li><b>NNET.ipynb</b> (Single layer neural network implementation, with details on back propagation)</li>
+<li><b>NNET_Keras_vs_Scratch.ipynb</b> (Benchmark of Keras single layer neural network with neural network implemented from scratch. The benchmark is done on the iris data set)</li>
 </ul>
 </li>
 <li>CPP: .cpp version of some of the implementations in the notebooks
