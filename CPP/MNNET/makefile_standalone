@@ -1,0 +1,24 @@
+OBJS = main.o headers.o layer.o network.o
+CC = g++
+DEBUG = -g
+CFLAGS =  -std=c++11 -fopenmp -O3 -c #$(DEBUG)
+LFLAGS = -Wall -std=c++11 -fopenmp #$(DEBUG)
+
+nn.x : $(OBJS)
+	$(CC) $(LFLAGS) $(OBJS) -o nn.x
+
+layer.o: headers.h layer.cpp
+	$(CC) $(CFLAGS) layer.cpp
+
+network.o: headers.h network.cpp
+	$(CC) $(CFLAGS) network.cpp
+
+headers.o: headers.h headers.cpp
+	$(CC) $(CFLAGS) headers.cpp
+
+main.o: headers.h main.cpp
+	$(CC) $(CFLAGS) main.cpp
+
+
+clean:
+	rm *.o *.x *.so
