@@ -24,12 +24,13 @@ Hello, my name is Mirko and I am a phycisist and machine learning enthusiast. In
 <li><b>GA.ipynb</b> (Genetic Algorithm for the solution of the Traveling Salesman problem)</li>
 <li><b>NNET.ipynb</b> (Single layer neural network implementation, with details on back propagation)</li>
 <li><b>NNET_Keras_vs_Scratch.ipynb</b> (Benchmark of Keras single layer neural network with neural network implemented from scratch. The benchmark is done on the iris data set)</li>
+<li><b>MNNET_CPP.ipynb</b> (Benchmark of Keras multilayer neural network with neural network implemented from scratch in C++. The benchmark is done on the iris data set)</li>
 </ul>
 </li>
 <li>CPP: .cpp version of some of the implementations in the notebooks
 <ul>
 <li>BMM: Bernoulli Mixture Models (cpp version of the BMM.ipynb for handwritten digits recognition)</li>
-<li>NNET: Multi-layer neural network (work in progress)</li>
+<li>MNNET: Multi-layer neural network. Can be compiled as a stand-alone exe or can be used to build a library for python, see the MNNET_CPP.ipynb notebook for details on how to use it as a library in python (work in progress to include more features in it, e.g. automatic differentiation for custom loss and activation functions)</li>
 </ul>
 </li>
 <li>IMAGES: some images and data files used in the notebooks</li>
